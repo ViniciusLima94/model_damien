@@ -119,7 +119,7 @@ def read_parameters(path="parameters.json"):
     """
     with open(path) as f:
         parameters = json.load(f)
-    return data
+    return parameters
 
 def create_neuron_group(N: int = 100, threshold: str="V > Vth",
                         refractorory: str="V>Vth", method="heun",

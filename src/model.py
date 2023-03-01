@@ -191,8 +191,16 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     parameters = read_parameters(parameters_path)
     # Initialize parameters of the model
     for key in parameters.keys():
-        group.set_states({key: parameters[key]}, units=False)
+        unit = 1
+        if key in ["epsilon", "gamma"]:
+            unit = (1 / ms)
+        if key in ["tau_I", "tau_n", "Cm"]:
+            unit = ms
+        has_units = isinstance(unit, units.fundamentalunits.Unit)
+        group.set_states({key: parameters[key] * unit}, units=has_units)
 
+    group.J = 1.0 / N
+    group.beta = group.w_i / group.w_o
     # Init eta
     group.eta = create_cauchy_samples(N, Delta, eta_bar)
     # Init kbath
@@ -211,7 +219,7 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     # Create network
     net = Network(collect())
     # net.add(group, syn, state_monitor, spike_monitor, fr_monitor)
-    
+
     if verbose:
         print("K_bath=%.2f" % group.K_bath[0])
         print("J=%.3f" % group.J[0])

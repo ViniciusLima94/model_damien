@@ -19,7 +19,7 @@ def set_up_scope(delta_t:float = 0.01, duration: float=1/3):
         with units of seconds.
     """
     start_scope()
-    defaultclock.dt = delta_tDT * ms
+    defaultclock.dt = delta_t * ms
     # Duration in minutes
     total = int(duration * 60000)
     duration = total * ms
@@ -122,7 +122,7 @@ def read_parameters(path="parameters.json"):
     return parameters
 
 def create_neuron_group(N: int = 100, threshold: str="V > Vth",
-                        refractorory: str="V>Vth", method="heun",
+                        refractory: str="V>Vth", method="heun",
                         init_states:list=None, k_bath: float = 15.5,
                         eta_bar: float = 0.1, Delta: float = 1.0,
                         connection_rule:str="i!=j",
@@ -165,7 +165,7 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     -------
     tuple
         A tuple containing the neuron group, the Brian2 network,
-        the state monitor, the spike monitor, and the 
+        the state monitor, the spike monitor, and the
         population rate monitor.
 
     """
@@ -178,19 +178,18 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     eqs = get_model_equations()
     # Define neuron group
     group = NeuronGroup(N, eqs, threshold=threshold,
-                        refractorory=refractorory,
+                        refractory=refractory,
                         method=method)
 
     state_variables = ["V", "n", "DK_i", "Kg"]
     # Add variability to initial state
-    init_states = np.random.randn((N, 4)) * 0.1 + init_states
-    for i, state_var in enumerate(state_variables):
-        group.set_states({state_var: init_states[i]}, units=False)
+    init_states = np.random.normal(size=(N, 4)) * 0.1 + init_states
+    for p, state_var in enumerate(state_variables):
+        group.set_states({state_var: init_states[:, p]}, units=False)
 
     # Read file with default parameter values
-    
-    # Initialize parameters of the model
     parameters = read_parameters(parameters_path)
+    # Initialize parameters of the model
     for key in parameters.keys():
         group.set_states({key: parameters[key]}, units=False)
 
@@ -210,7 +209,8 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     syn.connect(connection_rule)
 
     # Create network
-    net = Network(group, state_monitor, spike_monitor, syn)
+    net = Network(collect())
+    net.add(group, syn, state_monitor, spike_monitor, fr_monitor)
     
     if verbose:
         print("K_bath=%.2f" % group.K_bath[0])

@@ -1,2 +1,2 @@
-# model_damien
+# Model Damien
 Codes for simulating model.

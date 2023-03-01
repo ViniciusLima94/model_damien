@@ -199,10 +199,10 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     group.K_bath = k_bath
 
     # Create monitors
-    state_monitor = StateMonitor(group, ("V", "n", "DK_i", "Kg", "K_o"),
-                                 record=True, dt=1 * ms)
-    spike_monitor = SpikeMonitor(group)
-    fr_monitor = PopulationRateMonitor(group)
+    # state_monitor = StateMonitor(group, ("V", "n", "DK_i", "Kg", "K_o"),
+                                 # record=True, dt=1 * ms)
+    # spike_monitor = SpikeMonitor(group)
+    # fr_monitor = PopulationRateMonitor(group)
 
     # Create synapses
     syn = Synapses(group, group, on_pre="V+=J*(E-V) ", method=method)
@@ -210,10 +210,13 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
 
     # Create network
     net = Network(collect())
-    net.add(group, syn, state_monitor, spike_monitor, fr_monitor)
+    # net.add(group, syn, state_monitor, spike_monitor, fr_monitor)
     
     if verbose:
         print("K_bath=%.2f" % group.K_bath[0])
         print("J=%.3f" % group.J[0])
 
-    return group, net, state_monitor, spike_monitor, fr_monitor
+    start_scope()
+    run(1000 * ms, report="stdout", report_period=30 * second)
+
+    return group, net#, state_monitor, spike_monitor, fr_monitor

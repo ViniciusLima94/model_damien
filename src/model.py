@@ -88,6 +88,7 @@ def get_model_equations():
         E : 1
         J: 1
         eta:1
+        Vth: 1
     """
     return eqs
 
@@ -122,6 +123,7 @@ def read_parameters(path="parameters.json"):
     return parameters
 
 def create_neuron_group(N: int = 100, threshold: str="V > Vth",
+                        Vth: float = 50.0,
                         refractory: str="V>Vth", method="heun",
                         init_states:list=None, k_bath: float = 15.5,
                         eta_bar: float = 0.1, Delta: float = 1.0,
@@ -205,12 +207,13 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
     group.eta = create_cauchy_samples(N, Delta, eta_bar)
     # Init kbath
     group.K_bath = k_bath
+    group.Vth = Vth
 
     # Create monitors
-    # state_monitor = StateMonitor(group, ("V", "n", "DK_i", "Kg", "K_o"),
-                                 # record=True, dt=1 * ms)
-    # spike_monitor = SpikeMonitor(group)
-    # fr_monitor = PopulationRateMonitor(group)
+    state_monitor = StateMonitor(group, ("V", "n", "DK_i", "Kg", "K_o"),
+                                 record=True, dt=1 * ms)
+    spike_monitor = SpikeMonitor(group)
+    fr_monitor = PopulationRateMonitor(group)
 
     # Create synapses
     syn = Synapses(group, group, on_pre="V+=J*(E-V) ", method=method)
@@ -224,7 +227,7 @@ def create_neuron_group(N: int = 100, threshold: str="V > Vth",
         print("K_bath=%.2f" % group.K_bath[0])
         print("J=%.3f" % group.J[0])
 
-    start_scope()
-    run(1000 * ms, report="stdout", report_period=30 * second)
+    # start_scope()
+    # run(1000 * ms, report="stdout", report_period=30 * second)
 
-    return group, net#, state_monitor, spike_monitor, fr_monitor
+    return group, net, state_monitor, spike_monitor, fr_monitor
